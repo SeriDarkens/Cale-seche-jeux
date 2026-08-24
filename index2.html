@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080604">
+<title>La Cale Sèche — Jeux</title>
+<style>
+
+:root{--black:#060403;--coal:#100a07;--wood:#2a130b;--wood2:#45200f;--orange:#ef7415;--orange2:#ff9d36;--red:#a51d12;--cream:#f2ddbc;--muted:#c5a27d;--line:#723313;}
+*{box-sizing:border-box} html{background:#060403} body{margin:0;color:var(--cream);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 82% 7%,rgba(190,25,12,.23),transparent 16%),radial-gradient(circle at 8% 31%,rgba(204,53,10,.13),transparent 13%),repeating-linear-gradient(0deg,#090604 0 46px,#140b07 47px 50px,#0b0705 51px 96px);min-height:100vh;overflow-x:hidden}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 130px 28px #000;z-index:50}
+.wrap{width:min(760px,94vw);margin:auto;padding:18px 0 44px;position:relative;z-index:2}
+.rope{position:fixed;top:0;bottom:0;width:12px;opacity:.55;z-index:1;background:repeating-linear-gradient(135deg,#8b6237 0 5px,#3a2415 5px 9px,#a16d3b 9px 13px,#4c2c18 13px 18px);box-shadow:0 0 12px #000} .rope.l{left:6px} .rope.r{right:6px}
+.hero{position:relative;text-align:center;padding:56px 18px 26px;margin-bottom:12px}
+.hero:before,.hero:after{content:"";position:absolute;top:8px;width:58px;height:82px;border:4px solid #3c2417;border-radius:11px 11px 16px 16px;background:radial-gradient(circle at 50% 56%,#ffd06a 0 7%,#ff541a 18%,#8e120a 43%,#170706 65%);box-shadow:0 0 28px 12px rgba(218,37,12,.25),inset 0 0 18px #000} .hero:before{left:4px} .hero:after{right:4px}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:#d8b58c}
+.hero h1{margin:6px 0 2px;font-family:Georgia,serif;font-size:clamp(40px,10vw,74px);line-height:.9;text-transform:uppercase;letter-spacing:.045em;text-shadow:0 4px 0 #56210b,0 10px 24px #000} .hero h1 span{color:var(--orange)}
+.hero p{margin:12px auto 0;max-width:520px;color:#d1ae86;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.skull-mark{font-size:30px;filter:drop-shadow(0 0 8px rgba(255,79,16,.3));margin:8px 0}
+.deck{display:grid;gap:11px;margin:10px 0 18px}
+.game-tile{width:100%;position:relative;display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:13px;text-align:left;border:2px solid #5b2a12;border-radius:8px;padding:15px 16px;color:var(--cream);background:linear-gradient(rgba(14,8,5,.84),rgba(13,7,4,.93)),repeating-linear-gradient(0deg,#45200f 0 18px,#32150b 19px 23px,#4d2310 24px 43px);box-shadow:0 10px 24px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,149,54,.08);cursor:pointer;min-height:76px}
+.game-tile:before{content:"";position:absolute;inset:6px;border:1px solid rgba(240,116,21,.18);pointer-events:none} .game-tile strong{display:block;color:var(--orange);font-family:Georgia,serif;font-size:22px;text-transform:uppercase;letter-spacing:.04em} .game-tile small{display:block;color:#d2b28c;font-size:12px;margin-top:3px} .game-tile .ico{font-size:34px;text-align:center;filter:drop-shadow(0 0 9px rgba(240,98,18,.2));display:flex;align-items:center;justify-content:center;min-width:0}.game-tile .ico.duo{flex-direction:column;gap:0;line-height:.82}.game-tile .ico.duo span{display:block} .game-tile .arrow{font-size:28px;color:var(--orange2)}
+.game-tile:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.55)} .game-tile:disabled strong{color:#9b765b} .soon{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:#a7886b!important}
+.card{position:relative;color:var(--cream);padding:23px;border:2px solid #5b2711;border-radius:9px;background:linear-gradient(rgba(13,7,4,.88),rgba(20,9,5,.94)),repeating-linear-gradient(0deg,#3b190c 0 22px,#271006 23px 26px,#471d0d 27px 47px);box-shadow:0 18px 46px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,158,69,.08);overflow:hidden} .card:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,133,42,.2);pointer-events:none}
+.inner{position:relative;z-index:2} h2{margin:0 0 8px;font-family:Georgia,serif;text-transform:uppercase;font-size:clamp(28px,7vw,44px);color:#f5d6a2;text-shadow:0 3px 0 #351209} .subtitle{color:#c9aa86;line-height:1.45} .stack{display:grid;gap:12px}
+.btn,.answer{appearance:none;border-radius:7px;font-weight:850;cursor:pointer} .btn{border:1px solid #8a3e16;padding:15px 16px;font-size:16px;color:#fff1dc;background:linear-gradient(#2a130b,#120806);text-transform:uppercase;letter-spacing:.035em} .btn.alt{background:linear-gradient(180deg,#f18422,#c84d0b 65%,#8e2d08);border-color:#ff9d40;color:#190904} .btn.ghost{background:rgba(0,0,0,.25);border-color:#674126;color:#dbc09e}
+input{width:100%;padding:15px;border:1px solid #71401f;border-radius:8px;background:#120906;color:#fff0d6;font-size:16px;outline:none} input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(231,111,18,.12)}
+.hidden{display:none!important} .pill{display:inline-block;padding:7px 11px;border-radius:4px;background:#281008;border:1px solid #813710;color:#ffb05f;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase} .badge{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.meta{display:flex;justify-content:space-between;gap:12px;font-weight:800;color:#d6b48e} .progress{height:10px;background:#120806;overflow:hidden;margin:14px 0 20px;border:1px solid #402011} .bar{height:100%;background:linear-gradient(90deg,#9d2e08,#ff7a16,#ffac43);transition:width .25s}
+.question{font-size:24px;font-weight:900;line-height:1.22;margin:14px 0 19px;color:#ffe5bd} .answers{display:grid;gap:10px} .answer{padding:14px;border:1px solid #633318;background:linear-gradient(180deg,#24110a,#160a06);color:#f1d5ae;text-align:left;font-size:16px} .answer.correct{background:#244624;border-color:#5b8c58} .answer.wrong{background:#5d2019;border-color:#a23a2e} .answer:disabled{cursor:default}
+.timer{font-size:14px;color:#caa47b} .timer strong{font-size:22px;color:#ff8b24} .result{text-align:center} .score{font-size:58px;font-weight:950;margin:8px 0;color:#ff8d26} .leader{margin-top:18px;padding-top:8px;border-top:1px solid rgba(255,129,32,.17)} .leader ol{padding-left:26px;text-align:left} .leader li{padding:9px 0;border-bottom:1px solid rgba(255,192,121,.09)} .tiny{font-size:12px;color:#ad8f71;line-height:1.45}
+.footer-card{margin-top:18px;padding:18px;border:2px solid #4c2512;background:rgba(13,7,4,.86);text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.38)} .footer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px} .footer-item{padding:12px;border:1px solid rgba(239,116,21,.2);background:rgba(0,0,0,.18)} .footer-item b{display:block;color:var(--orange2);text-transform:uppercase;font-size:12px;letter-spacing:.08em;margin-bottom:5px} .footer-item span{font-size:13px;color:#e6c9a6} .drink-safe{font-size:10px;color:#87715d;margin-top:13px;letter-spacing:.04em} .admin-link{display:block;text-align:center;margin-top:12px;color:#876e58;font-size:11px;text-decoration:none}
+
+.door-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:#050302;overflow:hidden}.door-overlay.active{display:flex}.door-panel{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.28)),repeating-linear-gradient(90deg,#1b0b06 0 24px,#32150b 25px 29px,#170906 30px 54px);box-shadow:inset 0 0 45px #000;transition:transform .75s cubic-bezier(.72,.01,.3,1)}.door-left{left:0;border-right:3px solid #6c2a10}.door-right{right:0;border-left:3px solid #6c2a10}.door-overlay.open .door-left{transform:translateX(-100%)}.door-overlay.open .door-right{transform:translateX(100%)}.door-message{position:relative;z-index:2;text-align:center;color:#ffd9aa;font-family:Georgia,serif;text-transform:uppercase;letter-spacing:.12em;text-shadow:0 3px 12px #000}.door-message .big{font-size:42px;display:block;margin-bottom:8px}.door-overlay.open .door-message{opacity:0;transition:opacity .2s}
+.loot-wrap{margin:18px auto 8px;max-width:330px}.chest{position:relative;height:155px;margin:0 auto 18px}.chest-base{position:absolute;left:8%;right:8%;bottom:0;height:88px;border:3px solid #7a3514;border-radius:8px;background:linear-gradient(#3b190c,#1b0c07);box-shadow:inset 0 0 0 5px #160804,0 12px 26px #000}.chest-lid{position:absolute;left:8%;right:8%;top:20px;height:72px;border:3px solid #7a3514;border-radius:50% 50% 8px 8px/65% 65% 12px 12px;background:linear-gradient(#4d2210,#261006);transform-origin:50% 100%;transition:transform .7s ease;box-shadow:inset 0 0 0 5px #160804}.chest-band{position:absolute;left:47%;top:18px;bottom:0;width:6%;background:#b66322;box-shadow:inset 0 0 0 1px #4f200b}.chest-lock{position:absolute;left:44%;bottom:48px;width:12%;height:28px;border:2px solid #cf792b;background:#6e2a0e;border-radius:4px;z-index:5}.chest.open .chest-lid{transform:rotateX(105deg)}.loot-glow{position:absolute;left:25%;right:25%;bottom:45px;height:55px;background:radial-gradient(circle,#ffb13b 0,#d34d0a 35%,transparent 70%);filter:blur(8px);opacity:0;transition:opacity .5s}.chest.open .loot-glow{opacity:.9}.loot-details{opacity:0;transform:translateY(8px);transition:.45s}.loot-details.show{opacity:1;transform:none}.coin-score{font-size:46px;font-weight:950;color:#ff9a2e;margin:4px 0}.rank-line{font-family:Georgia,serif;font-size:22px;color:#f3d4a6;margin-bottom:10px}.open-loot{margin-top:6px}
+@media(max-width:520px){
+  body:after{box-shadow:inset 0 0 70px 12px #000}
+  .wrap{width:calc(100% - 28px);padding:8px 0 28px}
+  .rope{width:7px;opacity:.35}.rope.l{left:2px}.rope.r{right:2px}
+  .hero{padding:22px 54px 14px;margin-bottom:6px}
+  .hero:before,.hero:after{top:7px;width:34px;height:50px;border-width:2px}
+  .hero:before{left:8px}.hero:after{right:8px}
+  .hero .eyebrow{font-size:9px;letter-spacing:.14em}
+  .hero h1{font-size:clamp(34px,12vw,50px);line-height:.92;letter-spacing:.02em}
+  .hero p{font-size:10px;line-height:1.4;letter-spacing:.045em;margin-top:9px}
+  .skull-mark{font-size:23px;margin:5px 0}
+  .deck{gap:9px;margin-top:6px}
+  .game-tile{grid-template-columns:36px minmax(0,1fr) 24px;gap:9px;padding:12px 10px;min-height:68px}
+  .game-tile strong{font-size:17px;line-height:1.05;overflow-wrap:anywhere}
+  .game-tile small{font-size:10.5px;line-height:1.25}
+  .game-tile .ico{font-size:24px}.game-tile .ico.duo{font-size:20px;line-height:.78}.game-tile .arrow{font-size:22px}
+  .card{padding:18px 14px;border-radius:7px}
+  h2{font-size:clamp(26px,9vw,36px);line-height:1}
+  .subtitle{font-size:13px}
+  .stack{gap:10px}.btn{width:100%;padding:13px 12px;font-size:14px}
+  .meta{align-items:center;gap:8px;font-size:12px;flex-wrap:wrap}
+  .timer strong{font-size:19px}
+  .progress{margin:10px 0 14px}
+  .pill{font-size:10px;padding:6px 8px}
+  .question{font-size:19px;line-height:1.25;margin:12px 0 14px;overflow-wrap:anywhere}
+  .answers{gap:8px}.answer{padding:12px 10px;font-size:15px;min-height:46px}
+  .footer-grid{grid-template-columns:1fr;gap:8px}.footer-card{padding:12px;margin-top:12px}.footer-item{padding:9px}
+  .score{font-size:42px;overflow-wrap:anywhere}.coin-score{font-size:34px;overflow-wrap:anywhere}.rank-line{font-size:18px}
+  .loot-wrap{max-width:280px}.chest{height:132px}.chest-base{height:74px}.chest-lid{height:61px}.chest-lock{bottom:40px}
+  .door-message{padding:0 26px;font-size:13px}.door-message .big{font-size:34px}
+}
+@media(max-width:360px){
+  .wrap{width:calc(100% - 20px)}
+  .hero{padding-left:44px;padding-right:44px}
+  .hero h1{font-size:31px}
+  .game-tile{grid-template-columns:32px minmax(0,1fr) 20px;padding:10px 8px}
+  .game-tile strong{font-size:15px}.game-tile small{font-size:9.5px}.game-tile .ico{font-size:21px}.game-tile .ico.duo{font-size:18px;line-height:.76}
+  .card{padding:15px 11px}.question{font-size:17px}.answer{font-size:14px}
+}
+
+
+/* ===== V4 FLOW ===== */
+.flow-card{margin-top:10px}
+.rules-list{display:grid;gap:10px;margin:18px 0}
+.rule{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;padding:12px;border:1px solid rgba(239,116,21,.22);background:rgba(0,0,0,.2);border-radius:7px}
+.rule .r-ico{font-size:26px;text-align:center}.rule b{display:block;color:#ffad55}.rule span{font-size:13px;color:#d6b795;line-height:1.35}
+.team-tag{font-size:12px;color:#b89877;margin-bottom:12px}.team-tag strong{color:#ff9d36}
+.feedback{min-height:22px;margin-top:12px;font-weight:800}
+.feedback.good{color:#8fd38a}.feedback.bad{color:#f58e7f}
+.score-pop{animation:scorePop .28s ease}@keyframes scorePop{50%{transform:scale(1.06)}}
+.mini-score{font-size:12px;color:#caa47b}.mini-score strong{color:#ff9d36;font-size:18px}
+.result-actions{display:grid;gap:10px;margin-top:14px}
+.notice{padding:10px 12px;border-left:3px solid #ef7415;background:rgba(239,116,21,.07);font-size:12px;color:#caa885;line-height:1.45}
+@media(max-width:520px){
+  .rules-list{gap:8px}.rule{grid-template-columns:36px 1fr;padding:10px}.rule .r-ico{font-size:22px}
+  .question{font-size:21px}.answer{min-height:52px}
+  .meta{font-size:12px}.mini-score strong{font-size:16px}
+  .hero{padding-top:34px}
+}
+
+</style>
+
+<style>
+/* En-tête verrouillé — version validée */
+.hero{
+  position:relative;
+  text-align:center;
+  padding-top:4.5rem !important;
+  padding-bottom:1rem !important;
+  overflow:visible !important;
+}
+.hero h1{
+  position:relative !important;
+  z-index:20 !important;
+  width:calc(100% - 2rem) !important;
+  margin:0 auto !important;
+  white-space:nowrap !important;
+  text-align:center !important;
+  line-height:1 !important;
+  font-size:clamp(1.45rem,7.2vw,2.35rem) !important;
+}
+.brand-anchor{
+  position:relative;
+  z-index:20;
+  margin:.55rem auto .4rem;
+  font-size:1.65rem;
+  line-height:1;
+}
+.hero p{
+  position:relative;
+  z-index:20;
+  margin:.35rem auto 0 !important;
+  width:calc(100% - 2.5rem);
+  text-align:center;
+}
+@media (min-width:701px){
+  .hero{
+    padding-top:3rem !important;
+  }
+  .hero h1{
+    font-size:clamp(2.2rem,5vw,4rem) !important;
+  }
+  .brand-anchor{
+    font-size:2rem;
+  }
+}
+</style>
+
+<style>#syncStatus{margin-top:5px;font-size:12px;color:#d5b18a}</style>
+</head>
+<body>
+<div id="doorOverlay" class="door-overlay" aria-hidden="true">
+  <div class="door-panel door-left"></div><div class="door-panel door-right"></div>
+  <div class="door-message"><span class="big">⚓</span>Descente dans la cale…</div>
+</div>
+<div class="rope l"></div><div class="rope r"></div>
+
+<main class="wrap">
+<header class="hero">
+  <h1>La Cale Sèche</h1>
+  <div class="brand-anchor">⚓</div>
+  <p>Entre dans la cale et défie l’équipage</p>
+</header>
+
+<section id="menu" class="deck" aria-label="Choix du jeu">
+  <button class="game-tile" id="blindTile" type="button">
+    <span class="ico">🎵</span>
+    <span><strong>Blind Test</strong><small>Musique, rapidité & mauvais perdants</small></span>
+    <span class="arrow">›</span>
+  </button>
+  <button class="game-tile" type="button" disabled><span class="ico">🧠</span><span><strong>Quiz</strong><small>Culture G, cinéma, soirées à thème</small><small class="soon">Bientôt disponible</small></span><span class="arrow">›</span></button>
+  <button class="game-tile" type="button" disabled><span class="ico">🥃</span><span><strong>Le Rhum Mystère</strong><small>Sauras-tu reconnaître l’équipage liquide ?</small><small class="soon">Bientôt disponible</small></span><span class="arrow">›</span></button>
+  <button class="game-tile" type="button" disabled><span class="ico">⚔️</span><span><strong>Défi du Jour</strong><small>Un challenge, une récompense</small><small class="soon">Bientôt disponible</small></span><span class="arrow">›</span></button>
+</section>
+
+<section id="teamScreen" class="card flow-card hidden">
+  <div class="inner">
+    <div class="pill">Blind Test</div>
+    <h2>Forme ton équipage</h2>
+    <p class="subtitle">Un téléphone par équipe. Choisis un nom qu’on pourra assumer sur le classement. 😈</p>
+    <div class="stack" style="margin-top:16px">
+      <input id="teamName" maxlength="28" placeholder="Nom de ton équipage" autocomplete="off">
+      <button class="btn alt" id="crewBtn" type="button">⚓ Continuer</button>
+      <button class="btn ghost" id="teamBackBtn" type="button">← Retour aux jeux</button>
+    </div>
+  </div>
+</section>
+
+<section id="rulesScreen" class="card flow-card hidden">
+  <div class="inner">
+    <div class="pill">Brief du capitaine</div>
+    <h2>Les règles</h2>
+    <p class="team-tag">Équipage : <strong id="rulesTeam"></strong></p>
+    <div class="rules-list">
+      <div class="rule"><div class="r-ico">🎵</div><div><b>10 questions</b><span>Une question à la fois, quatre réponses possibles.</span></div></div>
+      <div class="rule"><div class="r-ico">⏱️</div><div><b>15 secondes</b><span>Si le chrono tombe à zéro, la réponse est perdue.</span></div></div>
+      <div class="rule"><div class="r-ico">🪙</div><div><b>100 doublons + bonus</b><span>Plus tu réponds vite, plus le butin augmente.</span></div></div>
+      <div class="rule"><div class="r-ico">🏆</div><div><b>Un classement</b><span>Les scores des différents téléphones sont réunis dans le même classement.</span></div></div>
+    </div>
+    <div class="notice">Version test : les vraies séquences musicales seront ajoutées après validation du parcours et de la mise en ligne.</div>
+    <div class="stack" style="margin-top:14px">
+      <button class="btn alt" id="launchBtn" type="button">🏴‍☠️ Lancer le Blind Test</button>
+      <button class="btn ghost" id="rulesBackBtn" type="button">← Changer d’équipage</button>
+    </div>
+  </div>
+</section>
+
+<section id="gameScreen" class="card flow-card hidden">
+  <div class="inner">
+    <div class="meta">
+      <span id="qCount">Question 1/10</span>
+      <span class="timer">⏱️ <strong id="time">15</strong>s</span>
+    </div>
+    <div class="meta" style="margin-top:7px">
+      <span class="team-tag" style="margin:0">⚓ <strong id="gameTeam"></strong></span>
+      <span class="mini-score">Butin : <strong id="liveScore">0</strong></span>
+    </div>
+    <div class="progress"><div class="bar" id="progressBar"></div></div>
+    <div class="pill" id="category">Années 2000</div>
+    <div class="question" id="question">Question</div>
+    <div class="answers" id="answers"></div>
+    <p id="feedback" class="feedback" aria-live="polite"></p>
+  </div>
+</section>
+
+<section id="resultScreen" class="card flow-card hidden">
+  <div class="inner result">
+    <div class="pill">Fin de traversée</div>
+    <h2 id="resultTeam">Équipage</h2>
+    <p class="subtitle">Ton butin est prêt. Ouvre le coffre pour découvrir ton score.</p>
+    <div class="loot-wrap">
+      <div id="chest" class="chest" aria-hidden="true"><div class="loot-glow"></div><div class="chest-lid"></div><div class="chest-base"></div><div class="chest-band"></div><div class="chest-lock"></div></div>
+      <button class="btn alt open-loot" id="openLootBtn" type="button">🗝️ Ouvrir le butin</button>
+      <div id="lootDetails" class="loot-details">
+        <div class="coin-score" id="score">0 doublons</div>
+        <div class="rank-line" id="rankLine"></div><div class="rank-line" id="syncStatus"></div>
+        <p class="subtitle" id="resultText"></p>
+        <div class="leader"><h3>🏆 Classement partagé</h3><ol id="leaderboard"></ol></div>
+        <div class="result-actions">
+          <button class="btn alt" id="replayBtn" type="button">Rejouer</button>
+          <button class="btn ghost" id="resultBackBtn" type="button">← Retour aux jeux</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer-card">
+  <div class="footer-grid">
+    <div class="footer-item"><b>📍 La Cale Sèche</b><span>4 rue de la Darse<br>83000 Toulon</span></div>
+    <div class="footer-item"><b>📸 Instagram</b><span>Compte à renseigner</span></div>
+  </div>
+  <div class="drink-safe">L’abus d’alcool est dangereux pour la santé. À consommer avec modération.</div>
+</footer>
+</main>
+
+<script>
+const QUESTION_BANK = {"2000s": [{"category": "Années 2000", "q": "Quel groupe chantait « Bring Me to Life » ?", "a": ["Evanescence", "Paramore", "Nightwish", "Within Temptation"], "correct": 0}, {"category": "Années 2000", "q": "Qui interprète « Crazy in Love » ?", "a": ["Rihanna", "Beyoncé", "Alicia Keys", "Nelly Furtado"], "correct": 1}, {"category": "Années 2000", "q": "Quel artiste chante « Feel » ?", "a": ["Robbie Williams", "Mika", "James Blunt", "Keane"], "correct": 0}, {"category": "Années 2000", "q": "Qui chantait « Toxic » ?", "a": ["Christina Aguilera", "P!nk", "Britney Spears", "Gwen Stefani"], "correct": 2}, {"category": "Années 2000", "q": "Quel groupe a popularisé « In the End » ?", "a": ["Sum 41", "Linkin Park", "Green Day", "Muse"], "correct": 1}, {"category": "Années 2000", "q": "Qui interprète « Moi... Lolita » ?", "a": ["Jenifer", "Alizée", "Lorie", "Nolwenn Leroy"], "correct": 1}, {"category": "Années 2000", "q": "Quel groupe chante « Seven Nation Army » ?", "a": ["The Strokes", "Arctic Monkeys", "The White Stripes", "Franz Ferdinand"], "correct": 2}, {"category": "Années 2000", "q": "Qui interprète « Whenever, Wherever » ?", "a": ["Shakira", "Anastacia", "Nelly Furtado", "Jennifer Lopez"], "correct": 0}, {"category": "Années 2000", "q": "Quel groupe français a sorti « J't'emmène au vent » ?", "a": ["Noir Désir", "Louise Attaque", "Kyo", "Superbus"], "correct": 1}, {"category": "Années 2000", "q": "Qui interprète « Complicated » ?", "a": ["Avril Lavigne", "P!nk", "Kelly Clarkson", "Dido"], "correct": 0}]};
+const CONFIG = { secondsPerQuestion:15, basePoints:100, speedBonusMax:50 };
+const screens = ["menu","teamScreen","rulesScreen","gameScreen","resultScreen"];
+const state = { team:"", index:0, score:0, timer:null, timeLeft:CONFIG.secondsPerQuestion, locked:false };
+
+const $ = s => document.querySelector(s);
+function show(id) {
+  screens.forEach(x => $("#"+x).classList.toggle("hidden", x!==id));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function questions() { return QUESTION_BANK["2000s"]; }
+function enterBlindTest() {
+  const o=$("#doorOverlay");
+  o.classList.add("active"); o.setAttribute("aria-hidden","false");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add("open")));
+  setTimeout(()=>show("teamScreen"),380);
+  setTimeout(()=>{o.classList.remove("active","open");o.setAttribute("aria-hidden","true");$("#teamName").focus();},900);
+}
+function validateCrew() {
+  const n=$("#teamName").value.trim().replace(/\s+/g," ");
+  if(!n) { $("#teamName").focus(); return; }
+  state.team=n.slice(0,28);
+  $("#rulesTeam").textContent=state.team;
+  show("rulesScreen");
+}
+function launchGame() {
+  state.index=0; state.score=0; state.locked=false;
+  $("#gameTeam").textContent=state.team;
+  $("#liveScore").textContent="0";
+  show("gameScreen"); renderQuestion();
+}
+function renderQuestion() {
+  clearInterval(state.timer); state.locked=false; state.timeLeft=CONFIG.secondsPerQuestion;
+  const item=questions()[state.index], list=questions();
+  $("#qCount").textContent=`Question ${state.index+1}/${list.length}`;
+  $("#progressBar").style.width=`${((state.index)/list.length)*100}%`;
+  $("#category").textContent=item.category;
+  $("#question").textContent=item.q;
+  $("#time").textContent=state.timeLeft;
+  $("#feedback").textContent=""; $("#feedback").className="feedback";
+  const box=$("#answers"); box.innerHTML="";
+  item.a.forEach((txt,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="answer"; b.textContent=txt;
+    b.addEventListener("click",()=>submitAnswer(i));
+    box.appendChild(b);
+  });
+  state.timer=setInterval(()=>{
+    state.timeLeft--;
+    $("#time").textContent=state.timeLeft;
+    if(state.timeLeft<=0){clearInterval(state.timer);reveal(null);}
+  },1000);
+}
+function submitAnswer(i) { if(state.locked)return; clearInterval(state.timer); reveal(i); }
+function reveal(chosen) {
+  state.locked=true;
+  const item=questions()[state.index];
+  const buttons=[...document.querySelectorAll(".answer")];
+  buttons.forEach((b,i)=>{b.disabled=true;if(i===item.correct)b.classList.add("correct");if(chosen===i&&i!==item.correct)b.classList.add("wrong");});
+  if(chosen===item.correct) {
+    const bonus=Math.round(CONFIG.speedBonusMax*(state.timeLeft/CONFIG.secondsPerQuestion));
+    const gained=CONFIG.basePoints+bonus; state.score+=gained;
+    $("#feedback").textContent=`Bonne réponse ! +${gained} doublons`;
+    $("#feedback").classList.add("good");
+    $("#liveScore").textContent=state.score;
+  } else {
+    $("#feedback").textContent=chosen===null ? `Temps écoulé ! Réponse : ${item.a[item.correct]}` : `Raté ! Réponse : ${item.a[item.correct]}`;
+    $("#feedback").classList.add("bad");
+  }
+  setTimeout(()=>{state.index++; state.index>=questions().length ? finish() : renderQuestion();},1250);
+}
+const SUPABASE_URL = "https://pvvnmgmoivixwibttjtn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0";
+const SESSION_CODE = "cale-seche-live";
+
+function getLocalBoard() {
+  try { return JSON.parse(localStorage.getItem("caleLeaderboardV5") || "[]"); }
+  catch (e) { return []; }
+}
+function saveLocalScore(team, score) {
+  const d = getLocalBoard();
+  d.push({team, score, date:new Date().toISOString()});
+  d.sort((a,b)=>b.score-a.score);
+  localStorage.setItem("caleLeaderboardV5", JSON.stringify(d.slice(0,20)));
+}
+async function saveScore(team, score) {
+  saveLocalScore(team, score);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      method:"POST",
+      headers:{
+        "apikey":SUPABASE_KEY,
+        "Authorization":`Bearer ${SUPABASE_KEY}`,
+        "Content-Type":"application/json",
+        "Prefer":"return=minimal"
+      },
+      body:JSON.stringify({team_name:team, score, session_code:SESSION_CODE})
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return true;
+  } catch (e) { console.warn("Sync score failed", e); return false; }
+}
+async function getSharedBoard() {
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/scores?select=team_name,score,created_at&session_code=eq.${encodeURIComponent(SESSION_CODE)}&order=score.desc,created_at.asc&limit=20`;
+    const res = await fetch(url, {headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`}});
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    return rows.map(x=>({team:x.team_name,score:x.score,date:x.created_at}));
+  } catch (e) { console.warn("Shared board failed", e); return getLocalBoard(); }
+}
+function escapeHtml(s) { return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
+async function renderLeaderboard() {
+  const d=(await getSharedBoard()).slice(0,10);
+  $("#leaderboard").innerHTML=d.length?d.map((x,i)=>`<li><strong>${i+1}. ${escapeHtml(x.team)}</strong> — ${x.score} doublons</li>`).join(""):"<li>Aucun équipage classé.</li>";
+  return d;
+}
+async function finish() {
+  clearInterval(state.timer);
+  const synced = await saveScore(state.team,state.score);
+  $("#resultTeam").textContent=state.team;
+  $("#score").textContent=state.score+" doublons";
+  $("#chest").classList.remove("open");
+  $("#lootDetails").classList.remove("show");
+  $("#openLootBtn").classList.remove("hidden");
+  const board = await renderLeaderboard();
+  const rank = board.findIndex(x=>x.team===state.team && x.score===state.score)+1;
+  $("#rankLine").textContent=rank>0?`#${rank} au classement partagé`:"";
+  $("#syncStatus").textContent=synced?"☁️ Score synchronisé":"📱 Mode local — synchro indisponible";
+  const max=questions().length*(CONFIG.basePoints+CONFIG.speedBonusMax), ratio=state.score/max;
+  $("#resultText").textContent=ratio>=.8?"Le capitaine peut dormir tranquille. Très gros butin.":ratio>=.5?"Joli score, moussaillon. L’équipage tient la route.":"Quelques tonneaux de rhum ont peut-être brouillé les pistes. 😈";
+  show("resultScreen");
+}
+
+$("#blindTile").addEventListener("click",enterBlindTest);
+$("#crewBtn").addEventListener("click",validateCrew);
+$("#teamName").addEventListener("keydown",e=>{if(e.key==="Enter")validateCrew()});
+$("#teamBackBtn").addEventListener("click",()=>show("menu"));
+$("#rulesBackBtn").addEventListener("click",()=>show("teamScreen"));
+$("#launchBtn").addEventListener("click",launchGame);
+$("#openLootBtn").addEventListener("click",()=>{
+  $("#chest").classList.add("open"); $("#openLootBtn").classList.add("hidden");
+  setTimeout(()=>$("#lootDetails").classList.add("show"),430);
+});
+$("#replayBtn").addEventListener("click",()=>{ $("#rulesTeam").textContent=state.team; show("rulesScreen"); });
+$("#resultBackBtn").addEventListener("click",()=>show("menu"));
+</script>
+</body>
+</html>
