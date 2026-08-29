@@ -43,6 +43,19 @@
     .error{color:#ffb3a7;background:rgba(120,20,10,.18);border:1px solid rgba(255,100,80,.25);padding:12px 14px;border-radius:12px;margin-top:12px}
     .footer{text-align:center;color:#7d6957;font-size:12px;padding:8px}
     button{appearance:none;border:1px solid rgba(240,138,36,.45);background:#160d08;color:var(--cream);border-radius:12px;padding:10px 14px;font-weight:800}
+    .crew-card{margin-top:16px;border-top:1px solid rgba(240,138,36,.22);padding-top:18px}
+    .crew-title{font-family:Georgia,"Times New Roman",serif;font-size:28px;margin:0 0 6px}
+    .crew-help{color:var(--muted);margin:0 0 14px;line-height:1.45}
+    .crew-form{display:grid;grid-template-columns:1fr auto;gap:10px}
+    .crew-input{width:100%;min-width:0;border:1px solid rgba(240,138,36,.42);background:#0c0806;color:var(--cream);border-radius:13px;padding:14px 15px;font:inherit;font-size:16px;outline:none}
+    .crew-input:focus{border-color:var(--orange2);box-shadow:0 0 0 3px rgba(240,138,36,.12)}
+    .crew-submit{background:linear-gradient(180deg,#ffab49,#e87b18);color:#1b0d05;border:0;padding:0 18px;font-size:15px}
+    .crew-submit:disabled{opacity:.55}
+    .crew-welcome{border:1px solid rgba(101,208,110,.32);background:rgba(101,208,110,.07);border-radius:16px;padding:15px}
+    .crew-name{font-size:22px;font-weight:900;color:#f7e7d1;margin-top:3px}
+    .crew-change{margin-top:12px;background:transparent}
+    .crew-msg{margin-top:10px;color:#f3c38c;font-size:14px}
+    @media(max-width:520px){.crew-form{grid-template-columns:1fr}.crew-submit{padding:14px 18px}}
   </style>
 </head>
 <body>
@@ -59,6 +72,11 @@
       <div id="content"><div class="empty">On consulte la Capitainerie…</div></div>
     </section>
 
+    <section class="card" id="crewCard" hidden>
+      <span class="eyebrow">Ton équipage</span>
+      <div id="crewArea"></div>
+    </section>
+
     <section class="card" id="scheduleCard" hidden>
       <span class="eyebrow">Ce soir</span>
       <div class="schedule" id="schedule"></div>
@@ -72,7 +90,7 @@ const SUPABASE_URL = 'https://pvvnmgmoivixwibttjtn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0';
 
 const el = id => document.getElementById(id);
-let state = { event:null, games:[] };
+let state = { event:null, games:[], crew:null };
 
 function localISODate(d=new Date()){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
@@ -91,6 +109,67 @@ function fmtCountdown(ms){
   const total=Math.floor(ms/1000), h=Math.floor(total/3600), min=Math.floor((total%3600)/60), s=total%60;
   if(h>0) return `Départ dans ${h} h ${String(min).padStart(2,'0')} min`;
   return `Départ dans ${min} min ${String(s).padStart(2,'0')} s`;
+}
+
+
+function crewStorageKey(eventId){ return `cale_seche_crew_${eventId}`; }
+function readSavedCrew(eventId){
+  try{
+    const raw=localStorage.getItem(crewStorageKey(eventId));
+    return raw ? JSON.parse(raw) : null;
+  }catch(_){ return null; }
+}
+function saveCrew(eventId,crew){
+  localStorage.setItem(crewStorageKey(eventId),JSON.stringify({id:crew.id,team_name:crew.team_name}));
+}
+function forgetCrew(eventId){
+  localStorage.removeItem(crewStorageKey(eventId));
+  state.crew=null;
+  renderCrew();
+}
+async function verifySavedCrew(eventId){
+  const saved=readSavedCrew(eventId);
+  if(!saved?.id) return null;
+  try{
+    const rows=await api(`crews?select=id,event_id,team_name&id=eq.${saved.id}&event_id=eq.${eventId}&limit=1`);
+    return rows[0] || null;
+  }catch(_){ return null; }
+}
+async function createCrew(teamName){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/crews`,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify({event_id:state.event.id,team_name:teamName})
+  });
+  if(r.status===409) throw new Error('Ce nom d’équipage est déjà pris pour cette soirée.');
+  if(!r.ok) throw new Error(`Impossible d’embarquer (${r.status}).`);
+  const rows=await r.json();
+  return rows[0];
+}
+function renderCrew(){
+  if(!state.event) return;
+  el('crewCard').hidden=false;
+  const area=el('crewArea');
+  if(state.crew){
+    area.innerHTML=`<div class="crew-welcome"><div class="muted">Tu joues avec</div><div class="crew-name">⚓ ${escapeHtml(state.crew.team_name)}</div><div class="crew-msg">Ce téléphone gardera cet équipage pour toute la soirée.</div><button class="crew-change" id="changeCrew" type="button">Changer d’équipage</button></div>`;
+    el('changeCrew').onclick=()=>forgetCrew(state.event.id);
+    return;
+  }
+  area.innerHTML=`<h3 class="crew-title">Crée ton équipage</h3><p class="crew-help">Un téléphone suffit par équipe. Choisis un nom, puis garde ce téléphone pour répondre pendant les blind tests.</p><form class="crew-form" id="crewForm"><input class="crew-input" id="crewName" maxlength="30" minlength="2" autocomplete="off" placeholder="Ex. Les Pirates du Rhum" required><button class="crew-submit" id="crewSubmit" type="submit">Embarquer</button></form><div class="crew-msg" id="crewMsg"></div>`;
+  el('crewForm').onsubmit=async(e)=>{
+    e.preventDefault();
+    const name=el('crewName').value.trim().replace(/\s+/g,' ');
+    const msg=el('crewMsg');
+    if(name.length<2){ msg.textContent='Choisis un nom d’au moins 2 caractères.'; return; }
+    el('crewSubmit').disabled=true; msg.textContent='On inscrit l’équipage…';
+    try{
+      const crew=await createCrew(name);
+      state.crew=crew; saveCrew(state.event.id,crew); renderCrew();
+    }catch(err){ msg.textContent=err.message; el('crewSubmit').disabled=false; }
+  };
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
 async function api(path){
@@ -112,7 +191,9 @@ async function load(){
     }
     state.event=events[0];
     state.games=await api(`games?select=id,event_id,game_time,title,game_order,status&event_id=eq.${state.event.id}&order=game_order.asc`);
+    state.crew=await verifySavedCrew(state.event.id);
     render();
+    renderCrew();
     setInterval(render,1000);
   }catch(err){
     el('statusTitle').textContent='Capitainerie indisponible';
