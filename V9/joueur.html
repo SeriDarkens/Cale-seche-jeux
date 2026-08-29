@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0705" />
+  <title>La Cale Sèche — Blind Test</title>
+  <style>
+    :root{
+      --bg:#080604;--panel:#160d08;--panel2:#221108;--line:#6b3518;
+      --orange:#f08a24;--orange2:#ffac4a;--cream:#f2dfc4;--muted:#b99d7f;
+      --green:#65d06e;--shadow:0 18px 55px rgba(0,0,0,.45)
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 50% -20%,rgba(240,138,36,.18),transparent 40%),
+      linear-gradient(180deg,#0d0805 0%,var(--bg) 52%,#050403 100%);color:var(--cream);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{padding:22px 16px 38px}
+    .wrap{width:min(760px,100%);margin:0 auto}
+    .brand{text-align:center;margin:8px 0 22px}
+    .brand h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,8vw,72px);margin:0;letter-spacing:.02em;text-shadow:0 2px 0 #6f2e13,0 7px 18px rgba(0,0,0,.6)}
+    .anchor{font-size:34px;line-height:1;margin:4px 0 8px;color:#c7b39a}
+    .subtitle{margin:0;color:var(--muted);font-size:17px}
+    .card{background:linear-gradient(180deg,rgba(34,17,8,.97),rgba(17,10,6,.97));border:1px solid rgba(240,138,36,.28);border-radius:22px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}
+    .eyebrow{display:inline-flex;border:1px solid rgba(240,138,36,.55);color:var(--orange2);border-radius:999px;padding:7px 12px;font-weight:800;letter-spacing:.16em;font-size:12px;text-transform:uppercase;margin-bottom:13px}
+    .status{font-family:Georgia,"Times New Roman",serif;font-size:clamp(29px,6vw,46px);margin:0 0 8px;line-height:1.05}
+    .event-name{font-weight:800;font-size:19px;color:#f7e7d1;margin:6px 0 2px}
+    .muted{color:var(--muted)}
+    .nextbox{margin-top:18px;border:1px solid rgba(240,138,36,.35);background:#0e0906;border-radius:18px;padding:18px}
+    .time{font-size:42px;font-weight:900;color:var(--orange2);letter-spacing:-.03em}
+    .game-title{font-size:22px;font-weight:850;margin-top:3px}
+    .countdown{margin-top:10px;font-variant-numeric:tabular-nums;color:#f3c38c;font-size:16px;font-weight:750}
+    .schedule{display:grid;gap:10px;margin-top:14px}
+    .game{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;padding:13px 14px;border:1px solid rgba(240,138,36,.18);border-radius:14px;background:rgba(0,0,0,.18)}
+    .game .gt{font-weight:900;color:#f0c18c}
+    .game .gn{font-weight:720}
+    .game.past{opacity:.48}
+    .game.current{border-color:rgba(101,208,110,.55);box-shadow:inset 0 0 0 1px rgba(101,208,110,.15)}
+    .game.next{border-color:rgba(240,138,36,.55)}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;margin-right:8px;box-shadow:0 0 14px rgba(101,208,110,.45)}
+    .empty{text-align:center;padding:30px 10px;color:var(--muted)}
+    .error{color:#ffb3a7;background:rgba(120,20,10,.18);border:1px solid rgba(255,100,80,.25);padding:12px 14px;border-radius:12px;margin-top:12px}
+    .footer{text-align:center;color:#7d6957;font-size:12px;padding:8px}
+    button{appearance:none;border:1px solid rgba(240,138,36,.45);background:#160d08;color:var(--cream);border-radius:12px;padding:10px 14px;font-weight:800}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand">
+      <h1>LA CALE SÈCHE</h1>
+      <div class="anchor">⚓</div>
+      <p class="subtitle">Blind Test — Quartier des équipages</p>
+    </header>
+
+    <section class="card" id="mainCard">
+      <span class="eyebrow">Programme du navire</span>
+      <h2 class="status" id="statusTitle">Chargement…</h2>
+      <div id="content"><div class="empty">On consulte la Capitainerie…</div></div>
+    </section>
+
+    <section class="card" id="scheduleCard" hidden>
+      <span class="eyebrow">Ce soir</span>
+      <div class="schedule" id="schedule"></div>
+    </section>
+
+    <div class="footer">La Cale Sèche • Toulon</div>
+  </main>
+
+<script>
+const SUPABASE_URL = 'https://pvvnmgmoivixwibttjtn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0';
+
+const el = id => document.getElementById(id);
+let state = { event:null, games:[] };
+
+function localISODate(d=new Date()){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseGameDate(dateStr,timeStr){
+  const t=String(timeStr).slice(0,5);
+  return new Date(`${dateStr}T${t}:00`);
+}
+function fmtDate(dateStr){
+  return new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date(`${dateStr}T12:00:00`));
+}
+function fmtTime(t){ return String(t).slice(0,5); }
+function fmtCountdown(ms){
+  if(ms<=0) return 'Ça commence maintenant';
+  const total=Math.floor(ms/1000), h=Math.floor(total/3600), min=Math.floor((total%3600)/60), s=total%60;
+  if(h>0) return `Départ dans ${h} h ${String(min).padStart(2,'0')} min`;
+  return `Départ dans ${min} min ${String(s).padStart(2,'0')} s`;
+}
+
+async function api(path){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
+    headers:{'apikey':SUPABASE_KEY}
+  });
+  if(!r.ok) throw new Error(`Supabase ${r.status}`);
+  return r.json();
+}
+
+async function load(){
+  try{
+    const today=localISODate();
+    const events=await api(`events?select=id,name,event_date,response_seconds,auto_mode,status&status=eq.scheduled&event_date=gte.${today}&order=event_date.asc,id.desc&limit=1`);
+    if(!events.length){
+      el('statusTitle').textContent='Aucun blind test programmé';
+      el('content').innerHTML='<div class="empty">La Capitainerie n\'a encore rien annoncé. Reviens un peu plus tard, moussaillon. 🏴‍☠️</div>';
+      return;
+    }
+    state.event=events[0];
+    state.games=await api(`games?select=id,event_id,game_time,title,game_order,status&event_id=eq.${state.event.id}&order=game_order.asc`);
+    render();
+    setInterval(render,1000);
+  }catch(err){
+    el('statusTitle').textContent='Capitainerie indisponible';
+    el('content').innerHTML=`<div class="error">Impossible de lire le programme pour le moment. ${err.message}</div>`;
+  }
+}
+
+function render(){
+  const ev=state.event, games=state.games;
+  if(!ev) return;
+  const now=new Date();
+  const eventDay=ev.event_date;
+  const today=localISODate(now);
+  const gameDates=games.map(g=>({...g,date:parseGameDate(eventDay,g.game_time)}));
+  const durationMs=(ev.response_seconds||15)*1000; // simple marker, real game duration comes later
+
+  let next=gameDates.find(g=>g.date>now);
+  let current=null;
+  // Temporary 20-minute active window so the status can show "en cours" during prototype tests.
+  for(const g of gameDates){
+    if(now>=g.date && now<new Date(g.date.getTime()+20*60*1000)) current=g;
+  }
+
+  el('scheduleCard').hidden=false;
+  const schedule=el('schedule');
+  schedule.innerHTML=gameDates.map(g=>{
+    let cls='';
+    if(current && g.id===current.id) cls='current';
+    else if(next && g.id===next.id) cls='next';
+    else if(g.date<now) cls='past';
+    return `<div class="game ${cls}"><div class="gt">${fmtTime(g.game_time)}</div><div class="gn">${g.title}</div></div>`;
+  }).join('');
+
+  if(eventDay>today){
+    el('statusTitle').textContent='Prochaine soirée';
+    el('content').innerHTML=`<div class="event-name">${ev.name}</div><div class="muted">${fmtDate(eventDay)}</div>${gameDates[0]?`<div class="nextbox"><div class="muted">Premier départ</div><div class="time">${fmtTime(gameDates[0].game_time)}</div><div class="game-title">${gameDates[0].title}</div></div>`:''}`;
+    return;
+  }
+
+  if(current){
+    el('statusTitle').innerHTML='<span class="dot"></span>Blind Test en cours';
+    el('content').innerHTML=`<div class="event-name">${ev.name}</div><div class="nextbox"><div class="time">${fmtTime(current.game_time)}</div><div class="game-title">${current.title}</div><div class="muted" style="margin-top:9px">Rejoins ton équipage. Le jeu joueur arrivera à l’étape suivante.</div></div>`;
+  }else if(next){
+    el('statusTitle').textContent='Prochain Blind Test';
+    el('content').innerHTML=`<div class="event-name">${ev.name}</div><div class="muted">${fmtDate(eventDay)}</div><div class="nextbox"><div class="time">${fmtTime(next.game_time)}</div><div class="game-title">${next.title}</div><div class="countdown">${fmtCountdown(next.date-now)}</div></div>`;
+  }else{
+    el('statusTitle').textContent='Soirée terminée';
+    el('content').innerHTML=`<div class="event-name">${ev.name}</div><div class="empty">Les jeux prévus sont terminés pour ce soir. 🍻</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
