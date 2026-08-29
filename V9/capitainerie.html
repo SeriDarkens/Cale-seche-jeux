@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080604">
+<title>Capitainerie V9 — La Cale Sèche</title>
+<style>
+:root{--black:#060403;--coal:#100a07;--wood:#2a130b;--wood2:#45200f;--orange:#ef7415;--orange2:#ff9d36;--cream:#f2ddbc;--muted:#c5a27d;--red:#a51d12;--green:#76b66d;--line:#723313}
+*{box-sizing:border-box}html{background:var(--black)}body{margin:0;color:var(--cream);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 82% 7%,rgba(190,25,12,.23),transparent 16%),radial-gradient(circle at 8% 31%,rgba(204,53,10,.13),transparent 13%),repeating-linear-gradient(0deg,#090604 0 46px,#140b07 47px 50px,#0b0705 51px 96px);min-height:100vh;overflow-x:hidden}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 130px 28px #000;z-index:50}.wrap{width:min(760px,94vw);margin:auto;padding:18px 0 46px;position:relative;z-index:2}.rope{position:fixed;top:0;bottom:0;width:12px;opacity:.55;z-index:1;background:repeating-linear-gradient(135deg,#8b6237 0 5px,#3a2415 5px 9px,#a16d3b 9px 13px,#4c2c18 13px 18px);box-shadow:0 0 12px #000}.rope.l{left:6px}.rope.r{right:6px}
+.hero{text-align:center;padding:34px 18px 20px}.hero h1{margin:0;font:900 clamp(34px,8vw,58px)/.95 Georgia,serif;text-transform:uppercase;letter-spacing:.045em;text-shadow:0 4px 0 #56210b,0 10px 24px #000}.hero .anchor{color:var(--orange);font-size:34px;line-height:1.1;margin-top:8px}.hero p{margin:5px 0 0;color:var(--muted)}
+.card{border:1px solid rgba(239,116,21,.34);background:linear-gradient(180deg,rgba(35,18,10,.96),rgba(12,8,6,.96));border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.03);padding:20px;margin:12px 0}.hidden{display:none!important}.pill{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid rgba(239,116,21,.5);color:var(--orange2);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.card h2{font:900 30px/1 Georgia,serif;margin:12px 0 8px}.subtitle{color:var(--muted);font-size:14px;line-height:1.45;margin:0 0 16px}
+label{display:block;font-size:12px;font-weight:800;color:#d8b58c;margin:13px 0 6px;text-transform:uppercase;letter-spacing:.08em}input,select{width:100%;border:1px solid rgba(239,116,21,.28);background:#0b0705;color:var(--cream);border-radius:10px;padding:12px 13px;font-size:16px;outline:none}input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(239,116,21,.12)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{width:100%;border:0;border-radius:11px;padding:13px 15px;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--orange2),var(--orange));color:#1b0c04;box-shadow:0 6px 18px rgba(0,0,0,.28)}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.ghost{background:transparent;color:var(--cream);border:1px solid rgba(239,116,21,.34);box-shadow:none}.btn.danger{background:#6c211a;color:#fff}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.status{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.22);color:var(--muted);font-size:13px}.status.ok{border:1px solid rgba(118,182,109,.4);color:#a7d3a0}.status.err{border:1px solid rgba(214,90,76,.45);color:#f0a49a}
+.game-row{display:grid;grid-template-columns:110px minmax(0,1fr) 44px;gap:8px;align-items:end;margin:10px 0;padding:12px;border:1px solid rgba(239,116,21,.2);background:rgba(0,0,0,.18);border-radius:12px}.game-row label{margin-top:0}.remove{height:45px;border-radius:10px;border:1px solid rgba(239,116,21,.25);background:#160b07;color:#e7b18a;font-size:18px;cursor:pointer}.section-title{margin:20px 0 8px;font-weight:900;color:var(--orange2)}.switchline{display:flex;gap:11px;align-items:center;margin-top:16px;padding:13px;border:1px solid rgba(239,116,21,.2);border-radius:12px;background:rgba(0,0,0,.18)}.switchline input{width:22px;height:22px;accent-color:var(--orange)}.switchline label{margin:0;text-transform:none;letter-spacing:0;color:var(--cream);font-size:14px}.summary{display:grid;gap:8px}.summary .row{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(239,116,21,.12);padding:9px 0}.summary .row span:first-child{color:var(--muted)}.games-summary{margin-top:12px}.game-chip{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(239,116,21,.16);border-radius:9px;margin:7px 0;background:rgba(0,0,0,.18)}.ready{font:900 24px/1.1 Georgia,serif;color:#a7d3a0;margin:10px 0}.topbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.who{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.small{font-size:12px;color:var(--muted)}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.game-row{grid-template-columns:90px minmax(0,1fr) 40px;padding:9px}.card{padding:16px 13px}.hero{padding-top:28px}.hero h1{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="rope l"></div><div class="rope r"></div>
+<main class="wrap">
+<header class="hero"><h1>La Cale Sèche</h1><div class="anchor">⚓</div><p>Capitainerie — V9 de test</p></header>
+
+<section id="loginCard" class="card">
+  <span class="pill">Accès privé</span>
+  <h2>Entrer dans la Capitainerie</h2>
+  <p class="subtitle">Connexion réservée aux membres autorisés. Aucun mot de passe n’est enregistré dans cette page.</p>
+  <form id="loginForm">
+    <label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required placeholder="capitaine@exemple.fr">
+    <label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+    <button class="btn" id="loginBtn" type="submit" style="margin-top:16px">⚓ Se connecter</button>
+  </form>
+  <div id="loginStatus" class="status">Prête à vérifier les accès.</div>
+</section>
+
+<section id="adminCard" class="card hidden">
+  <div class="topbar"><div><span class="pill">Capitainerie</span><div id="adminWho" class="who"></div></div><button id="logoutBtn" class="btn ghost" style="width:auto;padding:9px 12px">Déconnexion</button></div>
+  <h2>Créer une soirée</h2>
+  <p class="subtitle">Programme la soirée ici. Une fois enregistrée, Supabase garde les horaires, les games et les lots.</p>
+
+  <form id="eventForm">
+    <label for="eventName">Nom de la soirée</label><input id="eventName" required maxlength="80" value="Blind Test du Dimanche">
+    <div class="grid2">
+      <div><label for="eventDate">Date</label><input id="eventDate" type="date" required></div>
+      <div><label for="responseSeconds">Temps de réponse</label><select id="responseSeconds"><option value="10">10 secondes</option><option value="15" selected>15 secondes</option><option value="20">20 secondes</option><option value="30">30 secondes</option></select></div>
+    </div>
+
+    <div class="section-title">🎵 Games programmées</div>
+    <div id="gamesList"></div>
+    <button type="button" id="addGameBtn" class="btn ghost">＋ Ajouter une game</button>
+
+    <div class="section-title">🏆 Lots</div>
+    <label for="prize1">🥇 1er</label><input id="prize1" maxlength="100" placeholder="Ex. Mètre de shooters">
+    <label for="prize2">🥈 2e</label><input id="prize2" maxlength="100" placeholder="Ex. Goodies">
+    <label for="prize3">🥉 3e</label><input id="prize3" maxlength="100" placeholder="Ex. Goodies">
+
+    <div class="switchline"><input id="autoMode" type="checkbox" checked><label for="autoMode"><strong>Mode automatique</strong><br><span class="small">Les horaires programmés serviront plus tard à lancer les games sans intervention.</span></label></div>
+
+    <button class="btn" id="saveBtn" type="submit" style="margin-top:18px">🏴‍☠️ Programmer la soirée</button>
+  </form>
+  <div id="saveStatus" class="status">Aucune modification envoyée.</div>
+</section>
+
+<section id="readyCard" class="card hidden">
+  <span class="pill">Programmation enregistrée</span>
+  <div class="ready">🟢 SOIRÉE PRÊTE</div>
+  <div id="readySummary" class="summary"></div>
+  <div class="actions"><button id="newEventBtn" class="btn">＋ Nouvelle soirée</button><button id="backToFormBtn" class="btn ghost">← Revenir au formulaire</button></div>
+</section>
+</main>
+<script>
+const SUPABASE_URL = "https://pvvnmgmoivixwibttjtn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0";
+let accessToken = null;
+let currentUser = null;
+let gameCounter = 0;
+const $ = s => document.querySelector(s);
+
+function status(el, text, kind="") { el.textContent=text; el.className="status"+(kind?" "+kind:""); }
+function escapeHtml(v){ return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
+function localDateISO(){ const d=new Date(); const offset=d.getTimezoneOffset(); return new Date(d.getTime()-offset*60000).toISOString().slice(0,10); }
+
+async function api(path, options={}){
+  const headers={apikey:SUPABASE_KEY,Accept:"application/json",...(options.headers||{})};
+  if(accessToken) headers.Authorization="Bearer "+accessToken;
+  const res=await fetch(SUPABASE_URL+path,{...options,headers});
+  const text=await res.text(); let body=null;
+  if(text){try{body=JSON.parse(text)}catch{body=text}}
+  if(!res.ok){const e=new Error("HTTP "+res.status);e.body=body;throw e}
+  return body;
+}
+
+async function login(email,password){
+  const res=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(body.error_description||body.msg||"Connexion refusée");
+  return body;
+}
+
+async function verifyAdmin(){
+  const rows=await api("/rest/v1/admin_users?select=user_id&user_id=eq."+encodeURIComponent(currentUser.id),{method:"GET"});
+  return Array.isArray(rows)&&rows.length>0;
+}
+
+function addGame(time="",title=""){
+  gameCounter++;
+  const row=document.createElement("div"); row.className="game-row"; row.dataset.id=gameCounter;
+  row.innerHTML=`<div><label>Heure</label><input class="game-time" type="time" required value="${escapeHtml(time)}"></div><div><label>Blind test</label><input class="game-title" required maxlength="100" placeholder="Ex. Rock 2000" value="${escapeHtml(title)}"></div><button type="button" class="remove" aria-label="Supprimer cette game">×</button>`;
+  row.querySelector(".remove").onclick=()=>{ if($("#gamesList").children.length<=1){alert("Garde au moins une game.");return} row.remove(); };
+  $("#gamesList").appendChild(row);
+}
+
+function resetGames(){ $("#gamesList").innerHTML=""; gameCounter=0; addGame("20:30","Blind Test Rock"); addGame("21:30","Blind Test Années 2000"); addGame("22:30","Blind Test Guilty Pleasures"); }
+function showAdmin(){ $("#loginCard").classList.add("hidden"); $("#adminCard").classList.remove("hidden"); $("#adminWho").textContent=currentUser?.email||"Compte administrateur"; }
+function showLogin(){ $("#loginCard").classList.remove("hidden"); $("#adminCard").classList.add("hidden"); $("#readyCard").classList.add("hidden"); }
+
+$("#eventDate").value=localDateISO(); resetGames();
+$("#addGameBtn").onclick=()=>addGame("","");
+
+$("#loginForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const btn=$("#loginBtn"); btn.disabled=true; status($("#loginStatus"),"Connexion en cours…");
+  try{
+    const session=await login($("#email").value.trim(),$("#password").value);
+    accessToken=session.access_token; currentUser=session.user;
+    if(!await verifyAdmin()){ accessToken=null; currentUser=null; throw new Error("Ce compte existe mais n’est pas autorisé dans la Capitainerie."); }
+    $("#password").value=""; status($("#loginStatus"),"Accès autorisé.","ok"); showAdmin();
+  }catch(err){ status($("#loginStatus"),"⚠️ "+err.message,"err"); }
+  finally{btn.disabled=false}
+});
+
+$("#logoutBtn").onclick=()=>{accessToken=null;currentUser=null;showLogin();status($("#loginStatus"),"Déconnectée.");};
+
+$("#eventForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=$("#saveBtn"), statusEl=$("#saveStatus"); btn.disabled=true; status(statusEl,"Enregistrement de la soirée…");
+  let createdId=null;
+  try{
+    if(!accessToken||!currentUser) throw new Error("Session expirée : reconnecte-toi.");
+    const gameRows=[...document.querySelectorAll(".game-row")].map((row,i)=>({time:row.querySelector(".game-time").value,title:row.querySelector(".game-title").value.trim(),order:i+1}));
+    if(!gameRows.length||gameRows.some(g=>!g.time||!g.title)) throw new Error("Chaque game doit avoir une heure et un nom.");
+    const times=gameRows.map(g=>g.time); if(new Set(times).size!==times.length) throw new Error("Deux games ne peuvent pas avoir exactement la même heure.");
+    const eventPayload={name:$("#eventName").value.trim(),event_date:$("#eventDate").value,response_seconds:Number($("#responseSeconds").value),auto_mode:$("#autoMode").checked,prize_1:$("#prize1").value.trim()||null,prize_2:$("#prize2").value.trim()||null,prize_3:$("#prize3").value.trim()||null,status:"scheduled"};
+    const created=await api("/rest/v1/events",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify(eventPayload)});
+    if(!Array.isArray(created)||!created[0]?.id) throw new Error("La soirée a été créée sans identifiant exploitable.");
+    createdId=created[0].id;
+    const gamesPayload=gameRows.map(g=>({event_id:createdId,game_time:g.time,title:g.title,game_order:g.order,status:"scheduled"}));
+    await api("/rest/v1/games",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(gamesPayload)});
+    status(statusEl,"✅ Soirée et games enregistrées dans Supabase.","ok");
+    renderReady({...eventPayload,id:createdId,games:gameRows});
+  }catch(err){
+    if(createdId){ try{ await api("/rest/v1/events?id=eq."+createdId,{method:"DELETE",headers:{Prefer:"return=minimal"}}); }catch(_){} }
+    const detail=err.body?.message||err.body?.msg||err.message; status(statusEl,"⚠️ "+detail,"err");
+  }finally{btn.disabled=false}
+});
+
+function renderReady(data){
+  const date=new Date(data.event_date+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const prizes=[data.prize_1,data.prize_2,data.prize_3].filter(Boolean);
+  $("#readySummary").innerHTML=`
+    <div class="row"><span>Soirée</span><strong>${escapeHtml(data.name)}</strong></div>
+    <div class="row"><span>Date</span><strong>${escapeHtml(date)}</strong></div>
+    <div class="row"><span>Réponses</span><strong>${data.response_seconds} s</strong></div>
+    <div class="row"><span>Automatique</span><strong>${data.auto_mode?"Oui":"Non"}</strong></div>
+    <div class="games-summary">${data.games.map(g=>`<div class="game-chip"><strong>${escapeHtml(g.time)}</strong><span>${escapeHtml(g.title)}</span></div>`).join("")}</div>
+    <div class="row"><span>Lots</span><strong>${prizes.length?escapeHtml(prizes.join(" • ")):"Non renseignés"}</strong></div>`;
+  $("#adminCard").classList.add("hidden"); $("#readyCard").classList.remove("hidden");
+}
+
+$("#backToFormBtn").onclick=()=>{$("#readyCard").classList.add("hidden");$("#adminCard").classList.remove("hidden");};
+$("#newEventBtn").onclick=()=>{document.querySelector("#eventForm").reset();$("#eventDate").value=localDateISO();$("#responseSeconds").value="15";$("#autoMode").checked=true;resetGames();$("#readyCard").classList.add("hidden");$("#adminCard").classList.remove("hidden");status($("#saveStatus"),"Nouveau formulaire prêt.");};
+</script>
+</body>
+</html>
