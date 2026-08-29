@@ -55,6 +55,10 @@
     .crew-name{font-size:22px;font-weight:900;color:#f7e7d1;margin-top:3px}
     .crew-change{margin-top:12px;background:transparent}
     .crew-msg{margin-top:10px;color:#f3c38c;font-size:14px}
+    .entry-box{margin-top:14px;border:1px solid rgba(240,138,36,.32);background:rgba(240,138,36,.06);border-radius:14px;padding:13px 14px}
+    .entry-label{color:var(--muted);font-size:13px}
+    .entry-game{font-weight:900;color:#f7e7d1;margin-top:3px}
+    .entry-ok{color:#93dd98;font-size:13px;margin-top:5px}
     @media(max-width:520px){.crew-form{grid-template-columns:1fr}.crew-submit{padding:14px 18px}}
   </style>
 </head>
@@ -90,7 +94,7 @@ const SUPABASE_URL = 'https://pvvnmgmoivixwibttjtn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0';
 
 const el = id => document.getElementById(id);
-let state = { event:null, games:[], crew:null };
+let state = { event:null, games:[], crew:null, entry:null, targetGame:null };
 
 function localISODate(d=new Date()){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
@@ -125,6 +129,8 @@ function saveCrew(eventId,crew){
 function forgetCrew(eventId){
   localStorage.removeItem(crewStorageKey(eventId));
   state.crew=null;
+  state.entry=null;
+  state.targetGame=null;
   renderCrew();
 }
 async function verifySavedCrew(eventId){
@@ -146,12 +152,70 @@ async function createCrew(teamName){
   const rows=await r.json();
   return rows[0];
 }
+
+function findTargetGame(){
+  if(!state.event || !state.games.length) return null;
+  const now=new Date();
+  const gameDates=state.games.map(g=>({...g,date:parseGameDate(state.event.event_date,g.game_time)}));
+  let current=null;
+  for(const g of gameDates){
+    if(now>=g.date && now<new Date(g.date.getTime()+20*60*1000)) current=g;
+  }
+  return current || gameDates.find(g=>g.date>now) || null;
+}
+
+async function getExistingEntry(gameId,crewId){
+  const rows=await api(`game_entries?select=id,game_id,crew_id,score,joined_at&game_id=eq.${gameId}&crew_id=eq.${crewId}&limit=1`);
+  return rows[0] || null;
+}
+
+async function createGameEntry(gameId,crewId){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/game_entries`,{
+    method:'POST',
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Prefer':'return=representation'
+    },
+    body:JSON.stringify({game_id:gameId,crew_id:crewId,score:0})
+  });
+  if(r.status===409) return await getExistingEntry(gameId,crewId);
+  if(!r.ok) throw new Error(`Inscription à la game impossible (${r.status}).`);
+  const rows=await r.json();
+  return rows[0] || null;
+}
+
+async function ensureGameEntry(){
+  state.targetGame=findTargetGame();
+  if(!state.crew || !state.targetGame){
+    state.entry=null;
+    renderCrew();
+    return;
+  }
+  try{
+    let entry=await getExistingEntry(state.targetGame.id,state.crew.id);
+    if(!entry) entry=await createGameEntry(state.targetGame.id,state.crew.id);
+    state.entry=entry;
+  }catch(err){
+    console.error('Game entry failed',err);
+    state.entry={error:err.message};
+  }
+  renderCrew();
+}
+
 function renderCrew(){
   if(!state.event) return;
   el('crewCard').hidden=false;
   const area=el('crewArea');
   if(state.crew){
-    area.innerHTML=`<div class="crew-welcome"><div class="muted">Tu joues avec</div><div class="crew-name">⚓ ${escapeHtml(state.crew.team_name)}</div><div class="crew-msg">Ce téléphone gardera cet équipage pour toute la soirée.</div><button class="crew-change" id="changeCrew" type="button">Changer d’équipage</button></div>`;
+    const entryHtml = state.targetGame
+      ? `<div class="entry-box">
+           <div class="entry-label">${state.targetGame.date <= new Date() ? 'Game en cours' : 'Prochaine game'}</div>
+           <div class="entry-game">${fmtTime(state.targetGame.game_time)} — ${escapeHtml(state.targetGame.title)}</div>
+           <div class="${state.entry?.error ? 'crew-msg' : 'entry-ok'}">${state.entry?.error ? '⚠️ '+escapeHtml(state.entry.error) : state.entry ? '✓ Équipage inscrit automatiquement' : 'Inscription en cours…'}</div>
+         </div>`
+      : `<div class="entry-box"><div class="entry-label">Aucune autre game ouverte ce soir.</div></div>`;
+    area.innerHTML=`<div class="crew-welcome"><div class="muted">Tu joues avec</div><div class="crew-name">⚓ ${escapeHtml(state.crew.team_name)}</div><div class="crew-msg">Ce téléphone gardera cet équipage pour toute la soirée.</div>${entryHtml}<button class="crew-change" id="changeCrew" type="button">Changer d’équipage</button></div>`;
     el('changeCrew').onclick=()=>forgetCrew(state.event.id);
     return;
   }
@@ -164,7 +228,7 @@ function renderCrew(){
     el('crewSubmit').disabled=true; msg.textContent='On inscrit l’équipage…';
     try{
       const crew=await createCrew(name);
-      state.crew=crew; saveCrew(state.event.id,crew); renderCrew();
+      state.crew=crew; saveCrew(state.event.id,crew); renderCrew(); await ensureGameEntry();
     }catch(err){ msg.textContent=err.message; el('crewSubmit').disabled=false; }
   };
 }
@@ -194,7 +258,12 @@ async function load(){
     state.crew=await verifySavedCrew(state.event.id);
     render();
     renderCrew();
-    setInterval(render,1000);
+    if(state.crew) await ensureGameEntry();
+    setInterval(()=>{
+      render();
+      const target=findTargetGame();
+      if(state.crew && target && target.id !== state.targetGame?.id) ensureGameEntry();
+    },1000);
   }catch(err){
     el('statusTitle').textContent='Capitainerie indisponible';
     el('content').innerHTML=`<div class="error">Impossible de lire le programme pour le moment. ${err.message}</div>`;
