@@ -147,7 +147,6 @@ function forgetCrew(eventId){
   state.submittedAnswer=null;
   state.lastRound=null;
   renderCrew();
-  if(state.entry && !state.entry.error) await refreshGameState();
 }
 async function verifySavedCrew(eventId){
   const saved=readSavedCrew(eventId);
@@ -217,6 +216,7 @@ async function ensureGameEntry(){
     state.entry={error:err.message};
   }
   renderCrew();
+  if(state.entry && !state.entry.error) await refreshGameState();
 }
 
 
