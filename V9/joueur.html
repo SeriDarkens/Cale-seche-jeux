@@ -59,6 +59,18 @@
     .entry-label{color:var(--muted);font-size:13px}
     .entry-game{font-weight:900;color:#f7e7d1;margin-top:3px}
     .entry-ok{color:#93dd98;font-size:13px;margin-top:5px}
+    .play-card{margin-top:16px;border:1px solid rgba(240,138,36,.36);background:rgba(18,8,3,.72);border-radius:18px;padding:18px}
+    .play-phase{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#f0a15a;font-weight:800}
+    .play-title{font-size:28px;font-weight:900;margin:6px 0 4px}
+    .play-sub{color:var(--muted);font-size:14px}
+    .play-timer{font-size:42px;font-weight:900;color:#ff9d36;margin:14px 0 10px}
+    .play-input{display:flex;gap:10px;margin-top:12px}
+    .play-input input{flex:1;min-width:0;background:#100806;border:1px solid rgba(240,138,36,.35);color:#f8ead8;border-radius:12px;padding:13px 14px;font-size:16px}
+    .play-input button{background:#ef7415;color:#160a04;border:0;border-radius:12px;padding:13px 16px;font-weight:900}
+    .play-answer{margin-top:10px;font-size:14px;color:#d7b894}
+    .reveal-box{margin-top:14px;padding:14px;border-radius:14px;background:rgba(111,150,78,.1);border:1px solid rgba(111,150,78,.35)}
+    .reveal-answer{font-size:24px;font-weight:900;color:#b7e39e}
+    .finished-box{margin-top:14px;padding:14px;border-radius:14px;background:rgba(255,157,54,.06);border:1px solid rgba(255,157,54,.22)}
     @media(max-width:520px){.crew-form{grid-template-columns:1fr}.crew-submit{padding:14px 18px}}
   </style>
 </head>
@@ -94,7 +106,7 @@ const SUPABASE_URL = 'https://pvvnmgmoivixwibttjtn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jlyb542r570zH95r-U8Jmw_4LQ6WWg0';
 
 const el = id => document.getElementById(id);
-let state = { event:null, games:[], crew:null, entry:null, targetGame:null };
+let state = { event:null, games:[], crew:null, entry:null, targetGame:null, gameState:null, submittedAnswer:null, lastRound:null };
 
 function localISODate(d=new Date()){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
@@ -131,7 +143,11 @@ function forgetCrew(eventId){
   state.crew=null;
   state.entry=null;
   state.targetGame=null;
+  state.gameState=null;
+  state.submittedAnswer=null;
+  state.lastRound=null;
   renderCrew();
+  if(state.entry && !state.entry.error) await refreshGameState();
 }
 async function verifySavedCrew(eventId){
   const saved=readSavedCrew(eventId);
@@ -203,6 +219,101 @@ async function ensureGameEntry(){
   renderCrew();
 }
 
+
+async function fetchGameState(){
+  if(!state.targetGame) return null;
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_game_state`,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({p_game_id:state.targetGame.id})
+  });
+  if(!r.ok) throw new Error(`État de la game impossible (${r.status}).`);
+  const rows=await r.json();
+  return Array.isArray(rows) ? rows[0] || null : rows;
+}
+
+async function getGameQuestionId(roundOrder){
+  const rows=await api(`game_questions?select=id,round_order&game_id=eq.${state.targetGame.id}&round_order=eq.${roundOrder}&limit=1`);
+  return rows[0]?.id || null;
+}
+
+async function submitAnswer(answerText){
+  if(!state.entry || !state.gameState || state.gameState.phase!=='answer') return;
+  const trimmed=answerText.trim();
+  if(!trimmed) return;
+  const gameQuestionId=await getGameQuestionId(state.gameState.round_order);
+  if(!gameQuestionId) throw new Error('Manche introuvable.');
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/answers`,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({
+      game_entry_id:state.entry.id,
+      game_question_id:gameQuestionId,
+      answer_text:trimmed
+    })
+  });
+  if(r.status===409){
+    state.submittedAnswer=trimmed;
+    return;
+  }
+  if(!r.ok) throw new Error(`Réponse impossible (${r.status}).`);
+  state.submittedAnswer=trimmed;
+}
+
+function renderPlayState(){
+  const gs=state.gameState;
+  if(!gs || !state.targetGame || !state.entry) return '';
+  if(state.lastRound !== gs.round_order){
+    state.lastRound = gs.round_order;
+    state.submittedAnswer = null;
+  }
+  if(gs.phase==='waiting'){
+    return `<div class="play-card">
+      <div class="play-phase">Prochaine game</div>
+      <div class="play-title">${escapeHtml(gs.game_title)}</div>
+      <div class="play-sub">Ton équipage est inscrit. La partie démarre automatiquement.</div>
+      <div class="play-timer">${Math.max(0,gs.seconds_left)} s</div>
+    </div>`;
+  }
+  if(gs.phase==='answer'){
+    return `<div class="play-card">
+      <div class="play-phase">Manche ${gs.round_order}/${gs.total_rounds}</div>
+      <div class="play-title">${escapeHtml(gs.question_prompt || 'À toi de jouer')}</div>
+      <div class="play-timer">${Math.max(0,gs.seconds_left)} s</div>
+      ${state.submittedAnswer
+        ? `<div class="play-answer">✓ Réponse envoyée : <strong>${escapeHtml(state.submittedAnswer)}</strong></div>`
+        : `<div class="play-input"><input id="roundAnswer" maxlength="100" autocomplete="off" placeholder="Ta réponse"><button id="sendAnswer" type="button">Valider</button></div>`
+      }
+    </div>`;
+  }
+  if(gs.phase==='reveal'){
+    return `<div class="play-card">
+      <div class="play-phase">Révélation • Manche ${gs.round_order}/${gs.total_rounds}</div>
+      <div class="play-sub">Réponse officielle</div>
+      <div class="reveal-box"><div class="reveal-answer">${escapeHtml(gs.reveal_answer || '—')}</div></div>
+      <div class="play-timer">${Math.max(0,gs.seconds_left)} s</div>
+    </div>`;
+  }
+  if(gs.phase==='finished'){
+    return `<div class="play-card">
+      <div class="play-phase">Game terminée</div>
+      <div class="finished-box"><strong>Le butin est compté.</strong><div class="play-sub">Le classement et les scores arrivent dans la prochaine étape.</div></div>
+    </div>`;
+  }
+  return '';
+}
+
+async function refreshGameState(){
+  if(!state.targetGame || !state.entry) return;
+  try{
+    state.gameState=await fetchGameState();
+  }catch(err){
+    console.error(err);
+    state.gameState=null;
+  }
+  renderCrew();
+}
+
 function renderCrew(){
   if(!state.event) return;
   el('crewCard').hidden=false;
@@ -215,7 +326,25 @@ function renderCrew(){
            <div class="${state.entry?.error ? 'crew-msg' : 'entry-ok'}">${state.entry?.error ? '⚠️ '+escapeHtml(state.entry.error) : state.entry ? '✓ Équipage inscrit automatiquement' : 'Inscription en cours…'}</div>
          </div>`
       : `<div class="entry-box"><div class="entry-label">Aucune autre game ouverte ce soir.</div></div>`;
-    area.innerHTML=`<div class="crew-welcome"><div class="muted">Tu joues avec</div><div class="crew-name">⚓ ${escapeHtml(state.crew.team_name)}</div><div class="crew-msg">Ce téléphone gardera cet équipage pour toute la soirée.</div>${entryHtml}<button class="crew-change" id="changeCrew" type="button">Changer d’équipage</button></div>`;
+    area.innerHTML=`<div class="crew-welcome"><div class="muted">Tu joues avec</div><div class="crew-name">⚓ ${escapeHtml(state.crew.team_name)}</div><div class="crew-msg">Ce téléphone gardera cet équipage pour toute la soirée.</div>${entryHtml}${renderPlayState()}<button class="crew-change" id="changeCrew" type="button">Changer d’équipage</button></div>`;
+    const answerInput=area.querySelector('#roundAnswer');
+    const sendBtn=area.querySelector('#sendAnswer');
+    const send=async()=>{
+      if(!answerInput || !sendBtn) return;
+      sendBtn.disabled=true;
+      const oldText=sendBtn.textContent;
+      sendBtn.textContent='Envoi…';
+      try{
+        await submitAnswer(answerInput.value);
+        renderCrew();
+      }catch(err){
+        alert(err.message);
+        sendBtn.disabled=false;
+        sendBtn.textContent=oldText;
+      }
+    };
+    if(sendBtn) sendBtn.onclick=send;
+    if(answerInput) answerInput.addEventListener('keydown',e=>{if(e.key==='Enter') send();});
     el('changeCrew').onclick=()=>forgetCrew(state.event.id);
     return;
   }
@@ -259,10 +388,14 @@ async function load(){
     render();
     renderCrew();
     if(state.crew) await ensureGameEntry();
-    setInterval(()=>{
+    setInterval(async()=>{
       render();
       const target=findTargetGame();
-      if(state.crew && target && target.id !== state.targetGame?.id) ensureGameEntry();
+      if(state.crew && target && target.id !== state.targetGame?.id){
+        await ensureGameEntry();
+      } else if(state.crew && state.entry && state.targetGame){
+        await refreshGameState();
+      }
     },1000);
   }catch(err){
     el('statusTitle').textContent='Capitainerie indisponible';
