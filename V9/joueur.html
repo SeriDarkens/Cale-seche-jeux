@@ -383,7 +383,7 @@ async function load(){
       return;
     }
     state.event=events[0];
-    state.games=await api(`games?select=id,event_id,game_time,title,game_order,status&event_id=eq.${state.event.id}&order=game_order.asc`);
+    state.games=await api(`games?select=id,event_id,game_time,title,game_order,status&event_id=eq.${state.event.id}&order=game_time.asc`);
     state.crew=await verifySavedCrew(state.event.id);
     render();
     renderCrew();
