@@ -303,10 +303,23 @@ function renderPlayState(){
   return '';
 }
 
-async function refreshGameState(){
+  async function refreshGameState(){
   if(!state.targetGame || !state.entry) return;
+  const previous = state.gameState;
   try{
-    state.gameState=await fetchGameState();
+    const next = await fetchGameState();
+    state.gameState = next;
+
+    const sameStep = previous && next
+      && previous.phase === next.phase
+      && previous.round_order === next.round_order
+      && previous.game_id === next.game_id;
+
+    if(sameStep){
+      const timer = document.querySelector('.play-card .play-timer');
+      if(timer) timer.textContent = `${Math.max(0,next.seconds_left)} s`;
+      return;
+    }
   }catch(err){
     console.error(err);
     state.gameState=null;
