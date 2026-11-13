@@ -239,25 +239,32 @@ async function getGameQuestionId(roundOrder){
 
 async function submitAnswer(answerText){
   if(!state.entry || !state.gameState || state.gameState.phase!=='answer') return;
-  const trimmed=answerText.trim();
+
+  const trimmed = answerText.trim();
   if(!trimmed) return;
-  const gameQuestionId=await getGameQuestionId(state.gameState.round_order);
+
+  const gameQuestionId = await getGameQuestionId(state.gameState.round_order);
   if(!gameQuestionId) throw new Error('Manche introuvable.');
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/answers`,{
+
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_game_answer`,{
     method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Content-Type':'application/json'
+    },
     body:JSON.stringify({
-      game_entry_id:state.entry.id,
-      game_question_id:gameQuestionId,
-      answer_text:trimmed
+      p_game_entry_id: state.entry.id,
+      p_game_question_id: gameQuestionId,
+      p_answer_text: trimmed
     })
   });
-  if(r.status===409){
-    state.submittedAnswer=trimmed;
-    return;
-  }
+
   if(!r.ok) throw new Error(`Réponse impossible (${r.status}).`);
-  state.submittedAnswer=trimmed;
+
+  const result = await r.json();
+
+  state.submittedAnswer = trimmed;
+  state.lastAnswerResult = Array.isArray(result) ? result[0] : result;
 }
 
 function renderPlayState(){
