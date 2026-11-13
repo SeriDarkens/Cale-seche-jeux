@@ -32,7 +32,25 @@ label{display:block;font-size:12px;font-weight:800;color:#d8b58c;margin:13px 0 6
   </form>
   <div id="loginStatus" class="status">Prête à vérifier les accès.</div>
 </section>
+<section id="resetCard" class="card hidden">
+  <span class="pill">Récupération</span>
+  <h2>Nouveau mot de passe</h2>
+  <p class="subtitle">Choisis un nouveau mot de passe pour ton accès à la Capitainerie.</p>
 
+  <form id="resetForm">
+    <label for="newPassword">Nouveau mot de passe</label>
+    <input id="newPassword" type="password" minlength="8" required>
+
+    <label for="confirmPassword">Confirmer le mot de passe</label>
+    <input id="confirmPassword" type="password" minlength="8" required>
+
+    <button class="btn" id="resetBtn" type="submit" style="margin-top:16px">
+      ⚓ Enregistrer le nouveau mot de passe
+    </button>
+  </form>
+
+  <div id="resetStatus" class="status">Choisis ton nouveau mot de passe.</div>
+</section>
 <section id="adminCard" class="card hidden">
   <div class="topbar"><div><span class="pill">Capitainerie</span><div id="adminWho" class="who"></div></div><button id="logoutBtn" class="btn ghost" style="width:auto;padding:9px 12px">Déconnexion</button></div>
   <h2>Créer une soirée</h2>
@@ -75,7 +93,80 @@ let accessToken = null;
 let currentUser = null;
 let gameCounter = 0;
 const $ = s => document.querySelector(s);
+function getRecoveryTokens(){
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const access = hash.get('access_token');
+  const refresh = hash.get('refresh_token');
+  const type = hash.get('type');
 
+  if(type === 'recovery' && access){
+    accessToken = access;
+    return { access, refresh };
+  }
+
+  return null;
+}
+  async function handlePasswordReset(){
+  const tokens = getRecoveryTokens();
+  if(!tokens) return false;
+
+  $('#loginCard').classList.add('hidden');
+  $('#adminCard').classList.add('hidden');
+  $('#resetCard').classList.remove('hidden');
+
+  $('#resetForm').onsubmit = async (e)=>{
+    e.preventDefault();
+
+    const password = $('#newPassword').value;
+    const confirm = $('#confirmPassword').value;
+
+    if(password.length < 8){
+      status($('#resetStatus'), 'Le mot de passe doit faire au moins 8 caractères.', 'error');
+      return;
+    }
+
+    if(password !== confirm){
+      status($('#resetStatus'), 'Les deux mots de passe ne correspondent pas.', 'error');
+      return;
+    }
+
+    const btn = $('#resetBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement…';
+
+    try{
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`,{
+        method:'PUT',
+        headers:{
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({ password })
+      });
+
+      if(!res.ok){
+        const body = await res.json().catch(()=>({}));
+        throw new Error(body.msg || body.message || 'Impossible de modifier le mot de passe.');
+      }
+
+      status($('#resetStatus'), 'Mot de passe modifié ✅ Tu peux maintenant te reconnecter.', 'success');
+
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+
+    }catch(err){
+      status($('#resetStatus'), err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '⚓ Enregistrer le nouveau mot de passe';
+    }
+  };
+
+  return true;
+}
 function status(el, text, kind="") { el.textContent=text; el.className="status"+(kind?" "+kind:""); }
 function escapeHtml(v){ return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
 function localDateISO(){ const d=new Date(); const offset=d.getTimezoneOffset(); return new Date(d.getTime()-offset*60000).toISOString().slice(0,10); }
@@ -113,7 +204,7 @@ function addGame(time="",title=""){
 function resetGames(){ $("#gamesList").innerHTML=""; gameCounter=0; addGame("20:30","Blind Test Rock"); addGame("21:30","Blind Test Années 2000"); addGame("22:30","Blind Test Guilty Pleasures"); }
 function showAdmin(){ $("#loginCard").classList.add("hidden"); $("#adminCard").classList.remove("hidden"); $("#adminWho").textContent=currentUser?.email||"Compte administrateur"; }
 function showLogin(){ $("#loginCard").classList.remove("hidden"); $("#adminCard").classList.add("hidden"); $("#readyCard").classList.add("hidden"); }
-
+handlePasswordReset();
 $("#eventDate").value=localDateISO(); resetGames();
 $("#addGameBtn").onclick=()=>addGame("","");
 
