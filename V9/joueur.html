@@ -301,12 +301,39 @@ function renderPlayState(){
       <div class="play-timer">${Math.max(0,gs.seconds_left)} s</div>
     </div>`;
   }
-  if(gs.phase==='finished'){
-    return `<div class="play-card">
-      <div class="play-phase">Game terminée</div>
-      <div class="finished-box"><strong>Le butin est compté.</strong><div class="play-sub">Le classement et les scores arrivent dans la prochaine étape.</div></div>
-    </div>`;
-  }
+if(gs.phase==='finished'){
+  const board = state.leaderboard || [];
+  const medals = ['🥇','🥈','🥉'];
+
+  const rankingHtml = board.length
+    ? board.map((team, index) => `
+        <div style="
+          display:grid;
+          grid-template-columns:38px 1fr auto;
+          gap:10px;
+          align-items:center;
+          padding:11px 8px;
+          border-bottom:1px solid rgba(255,255,255,.08);
+        ">
+          <strong>${medals[index] || team.rank}</strong>
+          <span>${escapeHtml(team.team_name)}</span>
+          <strong>${team.score} pt${team.score > 1 ? 's' : ''}</strong>
+        </div>
+      `).join('')
+    : `<div class="play-sub">Chargement du classement…</div>`;
+
+  return `<div class="play-card">
+    <div class="play-phase">🏴‍☠️ Game terminée</div>
+    <div class="play-title">Le butin est attribué</div>
+
+    <div class="finished-box" style="margin-top:16px">
+      <strong>🏆 Classement final</strong>
+      <div style="margin-top:10px">
+        ${rankingHtml}
+      </div>
+    </div>
+  </div>`;
+}
   return '';
 }
 
