@@ -176,7 +176,10 @@ function findTargetGame(){
   for(const g of gameDates){
     if(now>=g.date && now<new Date(g.date.getTime()+20*60*1000)) current=g;
   }
-  return current || gameDates.find(g=>g.date>now) || null;
+  return current
+  || gameDates.find(g=>g.date>now)
+  || gameDates.filter(g=>g.date<=now).sort((a,b)=>b.date-a.date)[0]
+  || null;
 }
 
 async function getExistingEntry(gameId,crewId){
