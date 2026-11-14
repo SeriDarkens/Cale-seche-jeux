@@ -360,7 +360,14 @@ if(gs.phase==='finished'){
   try{
     const next = await fetchGameState();
     state.gameState = next;
-
+if(next && next.phase === 'finished'){
+  try{
+    state.leaderboard = await getLeaderboard();
+  }catch(err){
+    console.error('Classement impossible', err);
+    state.leaderboard = [];
+  }
+}
     const sameStep = previous && next
       && previous.phase === next.phase
       && previous.round_order === next.round_order
