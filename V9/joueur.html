@@ -391,6 +391,13 @@ if(next && next.phase === 'finished'){
     state.leaderboard = [];
   }
 }
+    if(next && next.phase === 'finished'){
+  try{
+    state.eventLeaderboard = await getEventLeaderboard();
+  }catch(err){
+    console.error('Classement général impossible', err);
+    state.eventLeaderboard = [];
+  }
     const sameStep = previous && next
       && previous.phase === next.phase
       && previous.round_order === next.round_order
