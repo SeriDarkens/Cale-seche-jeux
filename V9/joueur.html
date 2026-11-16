@@ -345,7 +345,15 @@ if(gs.phase==='finished'){
   const board = state.leaderboard || [];
   const eventBoard = state.eventLeaderboard || [];
   const medals = ['🥇','🥈','🥉'];
+const lastGame = [...state.games]
+  .sort((a,b)=>
+    parseGameDate(state.event.event_date,a.game_time)
+    - parseGameDate(state.event.event_date,b.game_time)
+  )
+  .at(-1);
 
+const isLastGame = lastGame && state.targetGame
+  && lastGame.id === state.targetGame.id;
   const rankingHtml = board.length
     ? board.map((team, index) => `
         <div style="
@@ -361,7 +369,9 @@ if(gs.phase==='finished'){
           <strong>${team.score} pt${team.score > 1 ? 's' : ''}</strong>
         </div>
       `).join('')
-    : `<div class="play-sub">Chargement du classement…</div>`;const eventRankingHtml = eventBoard.length
+    : `<div class="play-sub">Chargement du classement…</div>`;
+  
+const eventRankingHtml = isLastGame && eventBoard.length
   ? eventBoard.map((team, index) => `
       <div style="
         display:grid;
