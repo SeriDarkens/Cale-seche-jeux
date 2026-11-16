@@ -422,6 +422,7 @@ if(next && next.phase === 'finished'){
     console.error('Classement général impossible', err);
     state.eventLeaderboard = [];
   }
+ }
     const sameStep = previous && next
       && previous.phase === next.phase
       && previous.round_order === next.round_order
